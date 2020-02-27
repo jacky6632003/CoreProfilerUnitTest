@@ -1,0 +1,1 @@
+Insert into YoubikeStation Values (N'6FAAADAB-C11B-4FB7-BED3-D34838C2F80C', N'001', N'捷運市政府站(3號出口)', 180, 156, N'信義區', N'20191018175518', 25.0408578889, 121.567904444, N'忠孝東路/松仁路(東南側)', N'Xinyi Dist.', N'MRT Taipei City Hall Stataion(Exit 3)-2', N'The S.W. side of Road Zhongxiao East Road & Road Chung Yan.', 24, 1);

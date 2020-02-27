@@ -1,0 +1,13 @@
+{
+  "DatabaseType": "localdb",
+  "DockerType": "linux",
+  "ContainerLabel": "exercise",
+  "LinuxDatabase": {
+    "DatabaseImage": "microsoft/mssql-server-linux",
+    "ContainerReadyMessage": "The default language (LCID 0) has been set for engine and full-text services"
+  },
+  "WindowsDatabase": {
+    "DatabaseImage": "microsoft/mssql-server-windows-developer",
+    "ContainerReadyMessage": "VERBOSE: Started SQL Server"
+  }
+}
