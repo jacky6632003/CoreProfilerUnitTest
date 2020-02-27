@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Implement\" />
-    <Folder Include="Interface\" />
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
+    <PackageReference Include="coreprofiler" Version="1.1.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="coreprofiler" Version="1.1.4" />
+    <ProjectReference Include="..\CoreProfilerUnitTest.Repository\CoreProfilerUnitTest.Repository.csproj" />
   </ItemGroup>
 
 </Project>

@@ -59,7 +59,7 @@ namespace CoreProfilerUnitTest.Repository.Implement
                 var pageSize = size < 0 || size > 100 ? 100 : size;
                 var start = @from <= 0 ? 1 : @from;
 
-                using (var conn = (_databaseHelper.GetMySQLConnection(this._databaseHelper.WLDOConnectionString)))
+                using (var conn = (_databaseHelper.GetConnection(this._databaseHelper.WLDOConnectionString)))
                 {
                     var parameters = new DynamicParameters();
 
@@ -86,7 +86,7 @@ namespace CoreProfilerUnitTest.Repository.Implement
             {
                 var sqlCommand = " SELECT count(p.Id) FROM [YoubikeStation] p WITH (NOLOCK) ";
 
-                using (var conn = (_databaseHelper.GetMySQLConnection(this._databaseHelper.WLDOConnectionString)))
+                using (var conn = (_databaseHelper.GetConnection(this._databaseHelper.WLDOConnectionString)))
                 {
                     var queryResult = await conn.QueryFirstOrDefaultAsync<int>(
                         sql: sqlCommand.ToString()
@@ -136,7 +136,7 @@ namespace CoreProfilerUnitTest.Repository.Implement
                 var pageSize = size < 0 || size > 100 ? 100 : size;
                 var start = @from <= 0 ? 1 : @from;
 
-                using (var conn = (_databaseHelper.GetMySQLConnection(this._databaseHelper.WLDOConnectionString)))
+                using (var conn = (_databaseHelper.GetConnection(this._databaseHelper.WLDOConnectionString)))
                 {
                     var parameters = new DynamicParameters();
 
@@ -168,7 +168,7 @@ namespace CoreProfilerUnitTest.Repository.Implement
                 Where p.StationArea = @StationArea
                 ";
 
-                using (var conn = (_databaseHelper.GetMySQLConnection(this._databaseHelper.WLDOConnectionString)))
+                using (var conn = (_databaseHelper.GetConnection(this._databaseHelper.WLDOConnectionString)))
                 {
                     var parameters = new DynamicParameters();
                     parameters.Add("StationArea", area.Truncate(10).ToNVarchar());

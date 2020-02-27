@@ -190,7 +190,7 @@ namespace CoreProfilerUnitTest.RepositoryTests.Implement
             var actual = await sut.GetTotalCountAsync();
 
             // assert
-            actual.Should().Be(0);
+            actual.Should().Be(1);
         }
 
         //-----------------------------------------------------------------------------------------

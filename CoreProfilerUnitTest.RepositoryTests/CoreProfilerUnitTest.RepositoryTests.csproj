@@ -27,4 +27,16 @@
   <ItemGroup>
     <Folder Include="TestData\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestData\Create.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\Data.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestSettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
