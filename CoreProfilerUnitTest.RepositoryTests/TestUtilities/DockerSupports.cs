@@ -1,4 +1,5 @@
 ﻿using CliWrap;
+using CliWrap.Buffered;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -8,13 +9,12 @@ using System.Threading;
 
 namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
 {
+    /// <summary>
+    /// class DockerSupports
+    /// </summary>
     public class DockerSupports
     {
         private static string _defaultContainerLabel;
-
-        private static int _port;
-
-        private static string _currentOsType;
 
         internal static string DefaultContainerLabel
         {
@@ -32,6 +32,8 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
 
         internal static string ContainerId { get; set; }
 
+        private static int _port;
+
         internal static int Port
         {
             get
@@ -47,6 +49,8 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
                 return _port;
             }
         }
+
+        private static string _currentOsType;
 
         internal static string CurrentOsType
         {
@@ -68,7 +72,11 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
         /// <returns>System.String.</returns>
         internal static string GetDockerVersionOsType()
         {
-            var executeResult = new Cli("docker").SetArguments("version").Execute();
+            var executeResult = Cli.Wrap("docker")
+                                   .WithArguments("version")
+                                   .ExecuteBufferedAsync()
+                                   .Select(x => x.StandardOutput)
+                                   .GetAwaiter().GetResult();
 
             const string windowsOsType = "windows/amd64";
             const string linuxOsType = "linux/amd64";
@@ -76,7 +84,7 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
             var windowsCount = 0;
             var linuxCount = 0;
 
-            using (var reader = new StringReader(executeResult.StandardOutput))
+            using (var reader = new StringReader(executeResult))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -119,11 +127,13 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
         internal static bool CheckImage(string imageName)
         {
             // 檢查指定的 image 是否存在
-            var executeResult = new Cli("docker")
-                                .SetArguments($"images {imageName}")
-                                .Execute();
+            var executeResult = Cli.Wrap("docker")
+                                   .WithArguments($"images {imageName}")
+                                   .ExecuteBufferedAsync()
+                                   .Select(x => x.StandardOutput)
+                                   .GetAwaiter().GetResult();
 
-            using (var reader = new StringReader(executeResult.StandardOutput))
+            using (var reader = new StringReader(executeResult))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -147,7 +157,9 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
         /// <param name="imageName">Name of the image.</param>
         /// <param name="containerReadyMessage">The container ready message.</param>
         /// <param name="containerLabel">The container label.</param>
-        /// <returns>System.Boolean.</returns>
+        /// <returns>
+        /// System.Boolean.
+        /// </returns>
         internal static bool CreateContainer(string imageName, string containerReadyMessage, string containerLabel = "")
         {
             containerLabel = string.IsNullOrWhiteSpace(containerLabel)
@@ -161,13 +173,15 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
             var executeArguments = $"run --rm -d -e SA_PASSWORD=1q2w3e4r5t_ -e ACCEPT_EULA=Y --label={containerLabel} -ti -p {Port}:1433 {imageName}";
             Console.WriteLine($"docker {executeArguments}");
 
-            var executeResult = new Cli("docker")
-                                .SetArguments(executeArguments)
-                                .Execute();
+            var executeResult = Cli.Wrap("docker")
+                                   .WithArguments(executeArguments)
+                                   .ExecuteBufferedAsync()
+                                   .Select(x => x.StandardOutput)
+                                   .GetAwaiter().GetResult();
 
             var lineCount = 0;
 
-            using (var reader = new StringReader(executeResult.StandardOutput))
+            using (var reader = new StringReader(executeResult))
             {
                 // 取得 Container ID，如有錯誤訊息則中斷測試
 
@@ -194,9 +208,13 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
 
             for (var i = 0; i < retryTimes; i++)
             {
-                var output = new Cli("docker").SetArguments($"logs {ContainerId}").Execute();
+                var output = Cli.Wrap("docker")
+                                .WithArguments($"logs {ContainerId}")
+                                .ExecuteBufferedAsync()
+                                .Select(x => x.StandardOutput)
+                                .GetAwaiter().GetResult();
 
-                var logs = output.StandardOutput;
+                var logs = output;
 
                 if (logs.Contains(containerReadyMessage))
                 {
@@ -218,19 +236,21 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
         }
 
         /// <summary>
-        /// 取得 Container 內部的 IP.
+        /// 取得 Container 內部的 IP (for Windows Container).
         /// </summary>
-        /// <param name="containerId">The container identifier.</param>
+        /// <param name="containerId">The container id.</param>
         /// <returns>System.String.</returns>
         internal static string GetContainerIp(string containerId)
         {
-            var executeResult = new Cli("docker")
-                                .SetArguments($"exec {containerId} ipconfig")
-                                .Execute();
+            var executeResult = Cli.Wrap("docker")
+                                   .WithArguments($"exec {containerId} ipconfig")
+                                   .ExecuteBufferedAsync()
+                                   .Select(x => x.StandardOutput)
+                                   .GetAwaiter().GetResult();
 
             var containerInsideIp = string.Empty;
 
-            using (var reader = new StringReader(executeResult.StandardOutput))
+            using (var reader = new StringReader(executeResult))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -259,19 +279,27 @@ namespace CoreProfilerUnitTest.RepositoryTests.TestUtilities
                 ? DefaultContainerLabel
                 : containerLabel.ToLower();
 
-            // 檢查指定的 image 是否存在
-            var dockerCli = new Cli("docker")
-                            .EnableExitCodeValidation(false)
-                            .EnableStandardErrorValidation(false);
+            // 檢查指定的 container 是否存在
+            var executeResult = Cli.Wrap("docker")
+                                   .WithValidation(CommandResultValidation.None)
+                                   .WithArguments($"ps --quiet --filter label={containerLabel}")
+                                   .ExecuteBufferedAsync()
+                                   .Select(x => x.StandardOutput)
+                                   .GetAwaiter().GetResult();
 
-            var executeResult = dockerCli.SetArguments($"ps --quiet --filter label={containerLabel}")
-                                         .Execute();
+            if (string.IsNullOrWhiteSpace(executeResult).Equals(true))
+            {
+                return;
+            }
 
-            // 移除測試資料庫的 Container
-            executeResult = dockerCli.SetArguments($"stop {executeResult.StandardOutput.Trim().Replace("\r\n", " ")}")
-                                     .Execute();
+            // 如果 container 存在則移除測試資料庫的 container
+            executeResult = Cli.Wrap("docker")
+                               .WithArguments($"stop {executeResult.Trim().Replace("\r\n", " ")}")
+                               .ExecuteBufferedAsync()
+                               .Select(x => x.StandardOutput)
+                               .GetAwaiter().GetResult();
 
-            using (var reader = new StringReader(executeResult.StandardOutput))
+            using (var reader = new StringReader(executeResult))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
